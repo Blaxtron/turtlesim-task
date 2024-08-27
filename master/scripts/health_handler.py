@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 import rospy
 from std_msgs.msg import Int64
+from math import sqrt
+
+turtles = {
+    'turtle1': {'health': 100, 'attacks': 10},
+    'turtle2': {'health': 100, 'attacks': 10},
+    'turtle3': {'health': 100, 'attacks': 10},
+    'turtle4': {'health': 100, 'attacks': 10},
+}
+
 
 class Turtle:
     def __init__(self,name,initial_health=100):
@@ -10,6 +19,27 @@ class Turtle:
 
     def print_health(self):
         rospy.loginfo(f"{self.name}'s health={self.health}")
+    attack_radius = 2.0
+
+def attack_callback(msg):
+    attacker_name, x, y = msg.data.split(':')
+    x, y = float(x), float(y)
+    if turtles[attacker_name]['attacks'] > 0:
+        rospy.loginfo(f"{attacker_name} is attacking at ({x}, {y})")
+        turtles[attacker_name]['attacks'] -= 1
+        for turtle_name, data in turtles.items():
+            if turtle_name != attacker_name:
+                distance = sqrt((data['x'] - x) ** 2 + (data['y'] - y) ** 2)
+                if distance <= attack_radius:
+                    data['health'] -= 50
+                    rospy.loginfo(f"{turtle_name} hit! New health: {data['health']}")
+                    health_pub.publish(f"{turtle_name}:{data['health']}")
+                    if data['health'] <= 0:
+                        rospy.loginfo(f"{turtle_name} eliminated!")
+                        turtles.pop(turtle_name)
+
+
+
 
 
 
