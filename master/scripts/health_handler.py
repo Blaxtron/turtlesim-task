@@ -45,6 +45,7 @@ def attack_callback(msg):
 
 def main():
     rospy.init_node("health_manager",anonymous=False)
+    rospy.Subscriber('attack_topic', String, attack_callback)
     r = rospy.Rate(5)
     #assigns each turtle as a class objects
     turtle1 = Turtle("turtle1",100)
