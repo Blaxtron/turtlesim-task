@@ -13,12 +13,20 @@ def get_key():
     key = sys.stdin.read(1)
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
     return key
+def create_attack_message(turtle_name, x, y):
+    """Generate an attack message."""
+    return f"{turtle_name}:{x}:{y}"
 
+def attack():
+    # Generate attack message for the current turtle
+    attack_msg = create_attack_message(current_turtle, 0.0, 0.0)  # Example coordinates
+    rospy.loginfo(f"Attack message: {attack_msg}")
+    attack_callback(attack_msg)  
 if __name__ == '__main__':
     settings = termios.tcgetattr(sys.stdin)
     
     rospy.init_node('turtle_controller')
-
+    
     turtles = ['/turtle1/cmd_vel', '/turtle2/cmd_vel', '/turtle3/cmd_vel', '/turtle4/cmd_vel']
     publishers = [rospy.Publisher(turtle, Twist, queue_size=1) for turtle in turtles]
     
@@ -36,7 +44,7 @@ if __name__ == '__main__':
                 for pub in publishers:
                     pub.publish(twist)
            elif key.lower() == 'q':  # 'Q' key to attack
-                attack()         
+                attack()       
             elif key == '\x03':  # Ctrl-C to exit
                 rospy.loginfo("Ctrl-C pressed. Exiting.")
                 break
