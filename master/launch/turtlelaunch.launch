@@ -1,0 +1,8 @@
+<launch>
+    <node pkg="turtlesim" name="turtle1" type="turtlesim_node" output="screen"/>
+    <node pkg="rosservice" name="turtlesim_spawn_turtle2" type="rosservice" args="call spawn 2.0 4.0 0.0 'turtle2'" />
+    <node pkg="rosservice" name="turtlesim_spawn_turtle3" type="rosservice" args="call spawn 4.0 6.0 0.0 'turtle3'" />
+    <node pkg="rosservice" name="turtlesim_spawn_turtle4" type="rosservice" args="call spawn 7.0 8.0 0.0 'turtle4'" />
+    <node pkg="master" name="game_engine_node" type="game_engine_node.py"/>
+    <node pkg="master" name="movement" type="movement.py"/>
+</launch>
