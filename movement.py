@@ -35,6 +35,8 @@ if __name__ == '__main__':
                 # Publish to all turtles
                 for pub in publishers:
                     pub.publish(twist)
+           elif key.lower() == 'q':  # 'Q' key to attack
+                attack()         
             elif key == '\x03':  # Ctrl-C to exit
                 rospy.loginfo("Ctrl-C pressed. Exiting.")
                 break
