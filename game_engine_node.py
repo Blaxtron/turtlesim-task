@@ -2,6 +2,7 @@
 
 import rospy
 from std_msgs.msg import Int64, String
+from turtlesim.srv import Kill
 from turtlesim.msg import Pose
 from math import sqrt
 
@@ -17,27 +18,36 @@ class Turtle:
     def print_health(self):
         rospy.loginfo(f"{self.name}'s health={self.health}")
 
+    def kill(self): #kill service to remove turtle from screen
+        rospy.wait_for_service('kill')
+        try:
+            kill_turtle = rospy.ServiceProxy('kill', Kill)
+            kill_turtle(self.name)
+            rospy.loginfo(f"{self.name} has been killed.")
+        except rospy.ServiceException as e:
+            rospy.logerr(f"Service call failed: {e}")
+
 class GameEngineNode:
     def __init__(self):
         rospy.init_node('game_engine')
-        self.turtles = {
+        self.turtles = {        #Turtle creation
             'turtle1': Turtle("turtle1", 100, 1.0, 2.0),
-            'turtle2': Turtle("turtle2", 100, 3.0, 4.0),#creating the 4 turtles
+            'turtle2': Turtle("turtle2", 100, 3.0, 4.0),
             'turtle3': Turtle("turtle3", 100, -1.0, -2.0),
             'turtle4': Turtle("turtle4", 100, -3.0, -4.0),
         }
-        self.attack_radius = 1.0  # Attack radius in meters
-        self.attack_damage = 50  # Damage 
+        self.attack_radius = 1.0 
+        self.attack_damage = 50  # Damage
 
-       
+        
         for turtle_name in self.turtles:
             rospy.Subscriber(f'/{turtle_name}/pose', Pose, self.pose_callback, turtle_name)
 
-        
+        # Subscribe to the attack topic
         rospy.Subscriber('attack_topic', String, self.attack_callback)
 
     def pose_callback(self, msg, turtle_name):
-        
+        # Update turtle position
         if turtle_name in self.turtles:
             self.turtles[turtle_name].x = msg.x
             self.turtles[turtle_name].y = msg.y
@@ -55,6 +65,7 @@ class GameEngineNode:
 
             for target_name, target in self.turtles.items():
                 if target_name != attacker_name:
+                    #check radius for other turtles here
                     distance = sqrt((target.x - attacker.x) ** 2 + (target.y - attacker.y) ** 2)
                     if distance <= self.attack_radius:
                         target.health -= self.attack_damage
@@ -62,13 +73,15 @@ class GameEngineNode:
                         target.publisher.publish(target.health)
                         if target.health <= 0:
                             rospy.loginfo(f"{target_name} eliminated!")
+                            target.kill()
                             eliminated_turtles.append(target_name)
 
-            # here i remove turtles that got killed 
+            # Remove eliminated turtles after iteration
             for turtle_name in eliminated_turtles:
                 self.turtles.pop(turtle_name)
-
-        
+        else:
+            rospy.loginfo(f"{attacker_name} Has no attacks left")
+        # Check if the game is over
         self.check_winner()
 
     def check_winner(self):
